@@ -8,7 +8,6 @@ void ICACHE_RAM_ATTR ledISR();
 
 int i =0, count = 0, cnt = 0, readHumid = 0, readTemp = 0, dt[82] = {0,}, before = micros();
 
-/*
 int readDHT11(){
   int dt[82] = {0,};
 
@@ -24,8 +23,55 @@ int readDHT11(){
 
   return 1;
 }
-*/
 int rise = 0;
+
+void ICACHE_RAM_ATTR rising(){
+  //Serial.println(count);
+  if(i > 20 && i < 25){
+    i++;
+    dt[cnt * 2] = micros();
+  }
+  else if(i == 25){
+     dt[cnt * 2] = micros() - dt[cnt * 2];
+     dt[cnt * 2 + 1] = micros();
+     i = 26;
+  }
+  else if(i == 26){
+     dt[cnt * 2 + 1] = micros() - dt[cnt * 2 + 1];  
+     i = 25;
+     count++;
+     cnt++;
+     dt[cnt * 2] = micros();
+     if(count == 40){
+        for(cnt = 0 ; cnt < 8 ; cnt++){
+          readHumid = readHumid << 1;
+          if(dt[cnt * 2 + 1] > 49){
+            readHumid = readHumid + 1;  
+          } 
+          else readHumid = readHumid + 0;
+        }
+    
+        for(cnt = 16 ; cnt < 24 ; cnt++){
+          readTemp = readTemp << 1;
+          if(dt[cnt * 2 + 1] > 49){
+            readTemp = readTemp + 1;  
+          } 
+          else readTemp = readTemp + 0;
+        }
+        Serial.printf("Temp:%d, Humid:%d\r\n",readTemp, readHumid, i);
+
+        noInterrupts();
+        tickerLed.attach_ms(6000,ledISR);
+
+        
+        i = 0;
+        count = 0;
+        cnt = 0; 
+        readTemp = 0;
+        readHumid = 0;
+     }
+  }
+}
 
 void ICACHE_RAM_ATTR ledISR(){
   if(i == 0){
