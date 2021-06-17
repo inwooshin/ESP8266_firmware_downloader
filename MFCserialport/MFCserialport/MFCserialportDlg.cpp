@@ -252,7 +252,6 @@ void CMFCserialportDlg::On(char* in) {
 }
 
 void CMFCserialportDlg::Send(char * in, int length) {
-
 	m_comm->Send(in, length);
 
 	int count = 0;
@@ -275,7 +274,7 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 	Send(sync, 50);
 
 	On("\nMem Begin...\n");
-	Send(memBegin, SizeofChar(memBegin));
+	Send(flashBegin, SizeofChar(flashBegin));
 
 	On("\nWrite Mem Data..\n");
 	
@@ -294,17 +293,17 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 		
 		//읽어온 메모리카피!
 		for (int i = 0; i < allLength; i++) {
-			memData[9 + i] = getData[i];
+			flashData[9 + i] = getData[i];
 		}
 
-		memData[allLength] = 0xC0;
+		flashData[allLength] = 0xC0;
 
 		//첵섬 넣기
 		for (int i = 0; i < 4 ; i++) {
-			memData[5 + i] = check[i];
+			flashData[5 + i] = check[i];
 		}
 
-		Send(memData, allLength);
+		Send(flashData, allLength);
 
 		char onPercentChar[20] = "";
 
@@ -315,6 +314,8 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 			On(onPercentChar);
 		}
 	}
+
+	Send(flashEnd, 14);
 }
 
 void CMFCserialportDlg::OnBnClickedButtonFileOpen()
