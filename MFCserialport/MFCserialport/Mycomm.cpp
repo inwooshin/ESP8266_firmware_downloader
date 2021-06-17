@@ -220,6 +220,7 @@ UINT CommThread(LPVOID lpData)
 	PurgeComm(Commy->m_hComDev, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 	LPARAM temp = (LPARAM)Commy;
 	SendMessage(Commy->m_hWnd, WM_MYCLOSE, 0, temp);
+	
 	return 0;
 }
 
@@ -292,7 +293,6 @@ BOOL CMycomm::Send(LPCTSTR outbuf, int len)
 	ClearCommError(m_hComDev, &ErrorFlags, &ComStat);
 
 	return bRet;
-
 }
 
 BOOL CMycomm::Send(char * outbuf, int len)
