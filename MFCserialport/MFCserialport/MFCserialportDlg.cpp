@@ -11,6 +11,7 @@
 #include "memory.h"
 #include "string.h"
 #include <stdlib.h>
+#include "Mycomm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -131,6 +132,7 @@ int Check = 0;
 
 LRESULT CMFCserialportDlg::OnReceive(WPARAM length, LPARAM lpara)
 {
+	Check = 1;
 	CString str;
 	char data[20000];
 	if (m_comm)
@@ -148,8 +150,6 @@ LRESULT CMFCserialportDlg::OnReceive(WPARAM length, LPARAM lpara)
 		str = "";
 		//UpdateData(FALSE);
 		m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
-
-		Check = 1;
 	}
 	return 0;
 }
@@ -255,36 +255,39 @@ void CMFCserialportDlg::Send(char * in, int length) {
 
 	m_comm->Send(in, length);
 
+	int count = 0;
+	while (!Check) { 
+		Wait(1); 
+		count++; 
+		if (count == 60000) { On("Error"); break; }
+
+		if(count % 10000 == 0) On("Still Here");
+	};
+
+	count = 0;
+
 	Check = 0;
 }
 
 void CMFCserialportDlg::OnBnClickedBtSend()
 {
-	/*
-	CString str;
-	GetDlgItem(IDC_EDIT_SEND_DATA)->GetWindowText(str);
-	str += "\r\n";
-	m_comm->Send(str, str.GetLength());
-	*/
-
 	On("\nSync\n");
 	Send(sync, 50);
 
-	//On("\nMem Begin...\n");
-	//Send(memBegin, SizeofChar(memBegin));
+	On("\nMem Begin...\n");
+	Send(memBegin, SizeofChar(memBegin));
 
 	On("\nWrite Mem Data..\n");
 	
 	char getData[50], changeDB[2] = { 0xDB, 0xDD }, changeCO[2] = {0xDB, 0xDC};
-	int allLength = 32, percent = 0;
+	int allLength = 8, percent = 0;
 	
 	//프로그램 다운로드!
-	/*
-	while (fgets(getData, 32, downloadThing) != NULL) {
-		allLength = 32;
+	while (fgets(getData, 8, downloadThing) != NULL) {
+		allLength = 8;
 		for (int i = 0; i < allLength; i++) {
 			if (getData[i] == 0xDB) { StrNinsert(getData, changeDB, i, 2); allLength++; i++; }
-			if (i % 32 != 0 && getData[i] == 0xC0) { StrNinsert(getData, changeCO, i, 2); allLength++; i++; }
+			if (i % 8 != 0 && getData[i] == 0xC0) { StrNinsert(getData, changeCO, i, 2); allLength++; i++; }
 		}
 
 		char* check = checksum(getData, allLength);
@@ -293,6 +296,7 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 		for (int i = 0; i < allLength; i++) {
 			memData[9 + i] = getData[i];
 		}
+
 		memData[allLength] = 0xC0;
 
 		//첵섬 넣기
@@ -311,7 +315,6 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 			On(onPercentChar);
 		}
 	}
-	*/
 }
 
 void CMFCserialportDlg::OnBnClickedButtonFileOpen()
@@ -333,7 +336,7 @@ void CMFCserialportDlg::OnBnClickedButtonFileOpen()
 			}
 		}
 		
-		strPathName.Format(pChar);
+		strPathName.Format(_T("%s"), pChar);
 		downloadThing = fopen(strPathName,"rb");
 		// 파일 경로를 가져와 사용할 경우, Edit Control에 값 저장
 		SetDlgItemText(IDC_EDIT_SEND_DATA, strPathName);
