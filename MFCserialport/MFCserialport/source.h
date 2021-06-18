@@ -3,25 +3,7 @@
 #ifndef SOURCE_H
 #define SOURCE_H
 
-/*
-char ESP_FLASH_BEGIN = 0x02;
-char ESP_FLASH_DATA = 0x03;
-char ESP_FLASH_END = 0x04;
-char ESP_MEM_BEGIN = 0x05;
-char ESP_MEM_END = 0x06;
-char ESP_MEM_DATA = 0x07;
-char ESP_SYNC = 0x08;
-char ESP_WRITE_REG = 0x09;
-char ESP_READ_REG = 0x0a;
-
-char ESP_RAM_BLOCK = 0x1800;
-char ESP_FLASH_BLOCK = 0x400;
-char ESP_ROM_BAUD = 115200;
-char ESP_IMAGE_MAGIC = 0xe9;
-*/
-
-
-int sync[50] = { 0xC0, 0x00, 0x08, 
+int sync[46] = { 0xC0, 0x00, 0x08, 
 		0x24, 0x00, 0x78, 0x01, 0x3A, 0x00,
 		0x07, 0x07, 0x12, 0x20, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
 		0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
@@ -37,8 +19,6 @@ int flashBegin[] = { 0xC0, 0x00, 0x02,
 			0x00, 0x00, 0x00, 0x00, 0xC0 //flash offset
 };
 
-//memoffset?? 조금 나중!
-
 int flashData[40] = {
 	0xC0, 0x00, 0x03,
 	0x08, 0x00, //Data Size 
@@ -53,6 +33,7 @@ int flashEnd[] = {
 	0x01, 0x00, 0x00, 0x00, 0xC0 //enter add
 };
 
+//checksum 을 만들어주는 함수!
 char* checksum(char * data, int length, unsigned int state = 0xef) {
 	char tmp[4] = {0,};
 	
@@ -69,16 +50,7 @@ char* checksum(char * data, int length, unsigned int state = 0xef) {
 	return tmp;
 }
 
-unsigned char* trans(int* in, int *length){
-	unsigned char str[100] = "";
-
-	for (int i = 0; i < sizeof(in) / sizeof(int); i++) {
-		str[i] = (unsigned char)in[i];
-	}
-
-	return str;
-}
-
+//size 를 재오는 함수!
 int SizeofChar(char* s) {
 	int i = 0;
 	while (s[i] != '\0')
@@ -87,15 +59,7 @@ int SizeofChar(char* s) {
 	return i;
 }
 
-int SizeofChar(int* s) {
-	int i = 0;
-	while (s[i] != '\0')
-		i++;
-
-	return i;
-}
-
-
+//패킷을 보낼때 문자열 중간에 삽입해주기 위한 함수!
 int StrNinsert(char* s1, char* s2, int pos, int n) {
     int i = 0;
     int j;

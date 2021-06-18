@@ -267,6 +267,7 @@ BOOL CMycomm::Create(HWND hWnd)
 
 }
 
+//데이터를 Serial 통신으로 보내는 함수! LPCSTR 형일때 사용
 BOOL CMycomm::Send(LPCTSTR outbuf, int len)
 {
 	BOOL          bRet = TRUE;
@@ -295,7 +296,8 @@ BOOL CMycomm::Send(LPCTSTR outbuf, int len)
 	return bRet;
 }
 
-BOOL CMycomm::Send(unsigned char * outbuf, int len)
+//데이터를 Serial 통신으로 보내는 함수! unsigned char 형일때 사용
+BOOL CMycomm::Send(unsigned char* outbuf, int len)
 {
 	BOOL        bRet = TRUE;
 	DWORD       ErrorFlags;
@@ -324,6 +326,7 @@ BOOL CMycomm::Send(unsigned char * outbuf, int len)
 
 }
 
+//데이터를 받아오는 함수!
 int CMycomm::Receive(LPSTR inbuf, int len)
 {
 	CSingleLock lockObj((CSyncObject*)m_pEvent, FALSE);

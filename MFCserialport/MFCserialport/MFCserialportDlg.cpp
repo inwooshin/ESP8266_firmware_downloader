@@ -130,6 +130,7 @@ LRESULT CMFCserialportDlg::OnThreadClosed(WPARAM length, LPARAM lpara)
 
 int Check = 0;
 
+//Data 가 Receive 되었을 떄 동작!
 LRESULT CMFCserialportDlg::OnReceive(WPARAM length, LPARAM lpara)
 {
 	Check = 1;
@@ -176,7 +177,7 @@ void CMFCserialportDlg::OnCbnSelchangeComboBaudrate()
 	UpdateData();
 }
 
-
+//Open 및 Close 버튼 눌렀을 시 동작!
 void CMFCserialportDlg::OnBnClickedBtConnect()
 {
 	if (comport_state)
@@ -239,10 +240,10 @@ void CMFCserialportDlg::OnEnChangeEditSendData()
 	// TODO:  여기에 컨트롤 알림 처리기 코드를 추가합니다.
 }
 
-
-void CMFCserialportDlg::On(unsigned char* in) {
+//문자 띄우기
+void CMFCserialportDlg::On(char* in) {
 	CString str;
-	str.Format("%s", in);
+	str.Format(in);
 
 	str += _T("\r\n");
 
@@ -251,63 +252,87 @@ void CMFCserialportDlg::On(unsigned char* in) {
 	m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
 }
 
-void CMFCserialportDlg::OnHex(char* in) {
+//16진수로 문자 띄우기
+void CMFCserialportDlg::OnHex(unsigned char * in) {
 	CString str;
 
-	for (int i = 0; i < SizeofChar(in); i++) {
-		char tmp[2];
-		snprintf(tmp, 1, "%02X", in[i]);
+	for (int i = 0; i < 46; i++) {
+		CString tmp;
+		tmp.Format("%02x", in[i]);
 		str += tmp;
 	}
 
 	str += _T("\r\n");
 
 	m_edit_rcv_view.ReplaceSel(str); //에디트박스에표시하기위함
-	//UpdateData(FALSE);
 	m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
 }
 
-/*
-void CMFCserialportDlg::Send(unsigned char * in, int length) {
-	m_comm->Send(in, length);
+//int 형 배열 16진수로 문자 띄우기
+void CMFCserialportDlg::OnHex(int* in) {
+	CString str;
+
+	for (int i = 0; i < 46; i++) {
+		CString tmp;
+		tmp.Format("%02X", in[i]);
+		str += tmp;
+	}
+
+	str += _T("\r\n");
+
+	m_edit_rcv_view.ReplaceSel(str); //에디트박스에표시하기위함
+	m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
+}
+
+//커맨드를 보내는 부분
+void CMFCserialportDlg::Send(int* in, int length) {
+	unsigned char tmp[60] = "";
+
+	for (int i = 0; i < length; i++) {
+		tmp[i] = (unsigned char)in[i];
+	}
+
+	//Serial 통신을 통해서 키트에 전송한다
+	m_comm->Send(tmp, length);
 
 	int count = 0;
-	while (!Check) { 
-		Wait(50); 
-		count++; 
+
+	//응답이 올때까지 기다린다.
+	while (!Check) {
+		Wait(10);
+		count++;
 		if (count == 6000) { On("Error"); break; }
 
-		if(count % 1000 == 0) On("Still Here");
+		if (count % 1000 == 0) On("Still Here");
 	};
 
 	count = 0;
-
 	Check = 0;
 }
-*/
 
+//Send 버튼을 눌렀을 경우!
 void CMFCserialportDlg::OnBnClickedBtSend()
 {
+	
 	unsigned char* transBuf = 0;
 	int length = 0;
 
-	transBuf = trans(sync, &length);
-	//Send(transBuf, length);
-	On(transBuf);
+	//Sync 신호 전달하기
+	On("Send");
+	Send(sync, 46);
 
-	/*
+	//Mem Begin 신호 전달
 	On("\nMem Begin...\n");
-	transBuf = trans(flashBegin, &length);
-	//Send(transBuf, length);
-	On(transBuf);
+	Send(flashBegin, 46);
 
-	On("\nWrite Mem Data..\n");
+	//Flash write 시작
+	On("\nWrite flash Data..\n");
 	
 	char getData[50], changeDB[2] = { 0xDB, 0xDD }, changeCO[2] = {0xDB, 0xDC};
 	int allLength = 8, percent = 0;
 	
 	//프로그램 다운로드!
-	/*
+
 	while (fgets(getData, 8, downloadThing) != NULL) {
 		allLength = 8;
 		for (int i = 0; i < allLength; i++) {
@@ -329,29 +354,23 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 			flashData[5 + i] = check[i];
 		}
 
-		//Send(flashData, allLength);
-		transBuf = 0;
-		length = 0;
-		trans(flashData, transBuf, &length);
-		Send(transBuf, length);
+		Send(flashData, length);
 
 		char onPercentChar[20] = "";
 
 		percent++;
 
+		//완수 percent 출력
 		if (percent % 8 == 10) {
 			sprintf(onPercentChar, "%f", (percent / 256) * 100);
 			On(onPercentChar);
 		}
 	}
 
-	transBuf = 0;
-	length = 0;
-	trans(flashData, transBuf, &length);
-	Send(transBuf, length);
-	*/
+	Send(flashEnd, length);
 }
 
+//FIle Open 버튼을 눌렀을 시에 파일을 불러올 수 있도록 한 함수
 void CMFCserialportDlg::OnBnClickedButtonFileOpen()
 {
 	CString str = _T("All files(*.*)|*.*|"); // 모든 파일 표시
@@ -364,6 +383,8 @@ void CMFCserialportDlg::OnBnClickedButtonFileOpen()
 		char* pChar = strPathName.GetBuffer();
 		char* comp = "\\";
 
+		//여기에서 \만 사용하면 읽어오지를 못해서
+		//\\를 사용하도록 여기에서 바꾸어주었다.
 		for(int i = 0 ; i < SizeofChar(pChar); i++) {
 			if (strncmp(&pChar[i], comp, 1) == 0) {
 				StrNinsert(pChar, comp, i, 1);
@@ -371,8 +392,10 @@ void CMFCserialportDlg::OnBnClickedButtonFileOpen()
 			}
 		}
 		
+		//파일의 이름을 받아온다, 
 		strPathName.Format(_T("%s"), pChar);
-		//downloadThing = fopen(pChar,"rb");
+		//파일 읽어오기!
+		downloadThing = fopen(pChar,"rb");
 		// 파일 경로를 가져와 사용할 경우, Edit Control에 값 저장
 		SetDlgItemText(IDC_EDIT_SEND_DATA, strPathName);
 	}

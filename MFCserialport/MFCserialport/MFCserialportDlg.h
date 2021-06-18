@@ -15,10 +15,12 @@ public:
 	CMycomm* m_comm;
 	LRESULT      OnThreadClosed(WPARAM length, LPARAM lpara);
 	LRESULT      OnReceive(WPARAM length, LPARAM lpara);
-	void On(unsigned char*);
-	void OnHex(char*);
+	void On(char*);
+	void OnHex(unsigned char*);
+	void OnHex(int*);
 	void OnRec(int);
 	void Send(unsigned char*, int);
+	void Send(int*, int);
 	void Wait(DWORD dwMillisecond);
 // 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
