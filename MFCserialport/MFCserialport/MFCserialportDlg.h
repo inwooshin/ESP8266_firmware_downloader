@@ -16,6 +16,7 @@ public:
 	LRESULT      OnThreadClosed(WPARAM length, LPARAM lpara);
 	LRESULT      OnReceive(WPARAM length, LPARAM lpara);
 	void On(char*);
+	void OnHex(char*);
 	void OnRec(int);
 	void Send(char*, int);
 	void Wait(DWORD dwMillisecond);
