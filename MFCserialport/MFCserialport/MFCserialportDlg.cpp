@@ -240,9 +240,9 @@ void CMFCserialportDlg::OnEnChangeEditSendData()
 }
 
 
-void CMFCserialportDlg::On(char* in) {
+void CMFCserialportDlg::On(unsigned char* in) {
 	CString str;
-	str.Format("%s",in);
+	str.Format("%s", in);
 
 	str += _T("\r\n");
 
@@ -267,7 +267,8 @@ void CMFCserialportDlg::OnHex(char* in) {
 	m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
 }
 
-void CMFCserialportDlg::Send(char * in, int length) {
+/*
+void CMFCserialportDlg::Send(unsigned char * in, int length) {
 	m_comm->Send(in, length);
 
 	int count = 0;
@@ -283,21 +284,20 @@ void CMFCserialportDlg::Send(char * in, int length) {
 
 	Check = 0;
 }
+*/
 
 void CMFCserialportDlg::OnBnClickedBtSend()
 {
-	char* transBuf = 0;
+	unsigned char* transBuf = 0;
 	int length = 0;
 
-	On("\nSync\n");
-	trans(sync, transBuf, &length);
+	transBuf = trans(sync, &length);
 	//Send(transBuf, length);
 	On(transBuf);
 
-	transBuf = 0;
-	length = 0;
+	/*
 	On("\nMem Begin...\n");
-	trans(flashBegin, transBuf, &length);
+	transBuf = trans(flashBegin, &length);
 	//Send(transBuf, length);
 	On(transBuf);
 
