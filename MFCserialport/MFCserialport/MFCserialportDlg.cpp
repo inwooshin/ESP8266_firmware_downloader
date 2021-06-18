@@ -251,16 +251,32 @@ void CMFCserialportDlg::On(char* in) {
 	m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
 }
 
+void CMFCserialportDlg::OnHex(char* in) {
+	CString str;
+
+	for (int i = 0; i < SizeofChar(in); i++) {
+		char tmp[2];
+		snprintf(tmp, 1, "%02X", in[i]);
+		str += tmp;
+	}
+
+	str += _T("\r\n");
+
+	m_edit_rcv_view.ReplaceSel(str); //에디트박스에표시하기위함
+	//UpdateData(FALSE);
+	m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
+}
+
 void CMFCserialportDlg::Send(char * in, int length) {
 	m_comm->Send(in, length);
 
 	int count = 0;
 	while (!Check) { 
-		Wait(1); 
+		Wait(50); 
 		count++; 
-		if (count == 60000) { On("Error"); break; }
+		if (count == 6000) { On("Error"); break; }
 
-		if(count % 10000 == 0) On("Still Here");
+		if(count % 1000 == 0) On("Still Here");
 	};
 
 	count = 0;
@@ -270,11 +286,20 @@ void CMFCserialportDlg::Send(char * in, int length) {
 
 void CMFCserialportDlg::OnBnClickedBtSend()
 {
-	On("\nSync\n");
-	Send(sync, 50);
+	char* transBuf = 0;
+	int length = 0;
 
+	On("\nSync\n");
+	trans(sync, transBuf, &length);
+	//Send(transBuf, length);
+	On(transBuf);
+
+	transBuf = 0;
+	length = 0;
 	On("\nMem Begin...\n");
-	Send(flashBegin, SizeofChar(flashBegin));
+	trans(flashBegin, transBuf, &length);
+	//Send(transBuf, length);
+	On(transBuf);
 
 	On("\nWrite Mem Data..\n");
 	
@@ -282,6 +307,7 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 	int allLength = 8, percent = 0;
 	
 	//프로그램 다운로드!
+	/*
 	while (fgets(getData, 8, downloadThing) != NULL) {
 		allLength = 8;
 		for (int i = 0; i < allLength; i++) {
@@ -296,26 +322,34 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 			flashData[9 + i] = getData[i];
 		}
 
-		flashData[allLength] = 0xC0;
+		flashData[9 + allLength] = 0xC0;
 
 		//첵섬 넣기
 		for (int i = 0; i < 4 ; i++) {
 			flashData[5 + i] = check[i];
 		}
 
-		Send(flashData, allLength);
+		//Send(flashData, allLength);
+		transBuf = 0;
+		length = 0;
+		trans(flashData, transBuf, &length);
+		Send(transBuf, length);
 
 		char onPercentChar[20] = "";
 
 		percent++;
 
-		if (percent % 4 == 10) {
-			sprintf(onPercentChar, "%f", 64 / percent);
+		if (percent % 8 == 10) {
+			sprintf(onPercentChar, "%f", (percent / 256) * 100);
 			On(onPercentChar);
 		}
 	}
 
-	Send(flashEnd, 14);
+	transBuf = 0;
+	length = 0;
+	trans(flashData, transBuf, &length);
+	Send(transBuf, length);
+	*/
 }
 
 void CMFCserialportDlg::OnBnClickedButtonFileOpen()
@@ -338,7 +372,7 @@ void CMFCserialportDlg::OnBnClickedButtonFileOpen()
 		}
 		
 		strPathName.Format(_T("%s"), pChar);
-		downloadThing = fopen(strPathName,"rb");
+		//downloadThing = fopen(pChar,"rb");
 		// 파일 경로를 가져와 사용할 경우, Edit Control에 값 저장
 		SetDlgItemText(IDC_EDIT_SEND_DATA, strPathName);
 	}
