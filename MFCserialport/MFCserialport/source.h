@@ -28,9 +28,6 @@ int sync[50] = { 0xC0, 0x00, 0x08,
 		0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0xC0 };
 //0x55 32¹ø ÇØ¾ßµÊ ¤Ð
 
-char sync2[] = { 0xC0, 0x00, 0x0A, 0x04, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x10, 0x00, 0x40, 0xC0 };
-
 int flashBegin[] = { 0xC0, 0x00, 0x02, 
 			0x10, 0x00, //Size 16byte
 			0x00, 0x00, 0x00, 0x00, //checksum
@@ -72,17 +69,14 @@ char* checksum(char * data, int length, unsigned int state = 0xef) {
 	return tmp;
 }
 
-char* trans(int* in, char * get, int *length){
-	CString str;
+unsigned char* trans(int* in, int *length){
+	unsigned char str[100] = "";
 
 	for (int i = 0; i < sizeof(in) / sizeof(int); i++) {
-		char tmp[2];
-		snprintf(tmp, 2, "%02X", in[i]);
-		str += tmp;
-		*length += 2;
+		str[i] = (unsigned char)in[i];
 	}
 
-	return str.GetBuffer();
+	return str;
 }
 
 int SizeofChar(char* s) {
