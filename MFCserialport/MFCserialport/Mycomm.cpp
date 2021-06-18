@@ -295,7 +295,7 @@ BOOL CMycomm::Send(LPCTSTR outbuf, int len)
 	return bRet;
 }
 
-BOOL CMycomm::Send(char * outbuf, int len)
+BOOL CMycomm::Send(unsigned char * outbuf, int len)
 {
 	BOOL        bRet = TRUE;
 	DWORD       ErrorFlags;

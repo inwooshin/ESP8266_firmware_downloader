@@ -39,7 +39,7 @@ public:
 	void Clear();
 	int Receive(LPSTR inbuf, int len);
 	BOOL Send(LPCTSTR outbuf, int len);
-	BOOL Send(char *, int len);
+	BOOL Send(unsigned char *, int len);
 	BOOL Create(HWND hWnd);
 	void HandleClose();
 	void Close();
