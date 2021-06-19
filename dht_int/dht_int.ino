@@ -8,24 +8,7 @@ void ICACHE_RAM_ATTR ledISR();
 
 int i =0, count = 0, cnt = 0, readHumid = 0, readTemp = 0, dt[82] = {0,}, before = micros();
 
-int readDHT11(){
-  int dt[82] = {0,};
-
-  //phase 1
-  digitalWrite(DHT11PIN, 1);
-  pinMode(DHT11PIN, OUTPUT);
-  delay(1);
-  digitalWrite(DHT11PIN, 0);
-  delay(20);
-  pinMode(DHT11PIN, INPUT_PULLUP);
-
-  delay(1000);
-
-  return 1;
-}
-int rise = 0;
-
-void ICACHE_RAM_ATTR rising(){
+void ICACHE_RAM_ATTR change(){
   //Serial.println(count);
   if(i > 20 && i < 25){
     i++;
@@ -58,7 +41,9 @@ void ICACHE_RAM_ATTR rising(){
           } 
           else readTemp = readTemp + 0;
         }
-        Serial.printf("Temp:%d, Humid:%d\r\n",readTemp, readHumid, i);
+        char buf[80];
+        sprintf(buf, " Temp:%d, Humid:%d\r\n", readTemp, readHumid);
+        Serial.println(buf);
 
         noInterrupts();
         tickerLed.attach_ms(6000,ledISR);
@@ -79,7 +64,7 @@ void ICACHE_RAM_ATTR ledISR(){
     digitalWrite(DHT11PIN, 1);
     pinMode(DHT11PIN, OUTPUT);
     tickerLed.attach_ms(1,ledISR);
-    attachInterrupt(digitalPinToInterrupt(DHT11PIN), rising, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(DHT11PIN), change, CHANGE);
   }
   else if(i == 1){
     i++;
@@ -94,7 +79,7 @@ void ICACHE_RAM_ATTR ledISR(){
 }
 
 void setup() {
-  Serial.begin(74880);
+  Serial.begin(57500);
   delay(1000);
 
   tickerLed.attach_ms(1,ledISR);
