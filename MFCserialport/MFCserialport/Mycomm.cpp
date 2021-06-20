@@ -327,7 +327,7 @@ BOOL CMycomm::Send(unsigned char* outbuf, int len)
 }
 
 //데이터를 받아오는 함수!
-int CMycomm::Receive(LPSTR inbuf, int len)
+int CMycomm::Receive(unsigned char * inbuf, int len)
 {
 	CSingleLock lockObj((CSyncObject*)m_pEvent, FALSE);
 	// argument value is not valid

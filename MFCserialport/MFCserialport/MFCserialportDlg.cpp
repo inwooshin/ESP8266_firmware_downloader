@@ -133,24 +133,31 @@ int Check = 0;
 //Data 가 Receive 되었을 떄 동작!
 LRESULT CMFCserialportDlg::OnReceive(WPARAM length, LPARAM lpara)
 {
-	Check = 1;
 	CString str;
-	char data[20000];
+	unsigned char data[20000];
 	if (m_comm)
 	{
+		Check = 1;
+		/*
 		m_comm->Receive(data, length); //length 길이만큼데이터를받는다.
 		data[length] = _T('\0');
+		data[length] = _T('\r\n');
 		str += _T("\r\n");
-		for (int i = 0; i < length; i++)
-		{
-			char tmp[20] = "";
-			sprintf(tmp, "%02X", data[i]);
+
+		unsigned char tmp[20] = "";
+
+		for (int i = 0; i < length; i++) {
+			CString tmp;
+			tmp.Format("%02X", data[i]);
 			str += tmp;
 		}
+
 		m_edit_rcv_view.ReplaceSel(str); //에디트박스에표시하기위함
 		str = "";
 		//UpdateData(FALSE);
 		m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
+		*/
+
 	}
 	return 0;
 }
@@ -284,6 +291,8 @@ void CMFCserialportDlg::OnHex(int* in) {
 	m_edit_rcv_view.LineScroll(m_edit_rcv_view.GetLineCount());
 }
 
+int notSend = 0;
+
 //커맨드를 보내는 부분
 void CMFCserialportDlg::Send(int* in, int length) {
 	unsigned char tmp[60] = "";
@@ -299,10 +308,9 @@ void CMFCserialportDlg::Send(int* in, int length) {
 
 	//응답이 올때까지 기다린다.
 	while (!Check) {
-		Wait(10);
+		Wait(50);
 		count++;
-		if (count == 6000) { On("Error"); break; }
-
+		if (count == 6000) { On("Error"); notSend = 1; break; }
 		if (count % 1000 == 0) On("Still Here");
 	};
 
@@ -315,7 +323,6 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 {
 	
 	unsigned char* transBuf = 0;
-	int length = 0;
 
 	//Sync 신호 전달하기
 	On("Send");
@@ -323,24 +330,23 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 
 	//Mem Begin 신호 전달
 	On("\nMem Begin...\n");
-	Send(flashBegin, 46);
+	Send(flashBegin, 26);
 
 	//Flash write 시작
 	On("\nWrite flash Data..\n");
 	
-	char getData[50], changeDB[2] = { 0xDB, 0xDD }, changeCO[2] = {0xDB, 0xDC};
+	unsigned char getData[64], changeDB[2] = { 0xDB, 0xDD }, changeCO[2] = {0xDB, 0xDC};
 	int allLength = 8, percent = 0;
 	
 	//프로그램 다운로드!
-
-	while (fgets(getData, 8, downloadThing) != NULL) {
-		allLength = 8;
+	while (fread(getData, sizeof(unsigned char), 32, downloadThing) != NULL) {
+		allLength = 32;
 		for (int i = 0; i < allLength; i++) {
-			if (getData[i] == 0xDB) { StrNinsert(getData, changeDB, i, 2); allLength++; i++; }
-			if (i % 8 != 0 && getData[i] == 0xC0) { StrNinsert(getData, changeCO, i, 2); allLength++; i++; }
+			if (getData[i] == 0xDB) { StrNinsert(getData, changeDB, i, 1); allLength++; i++; }
+			if (i % 8 != 0 && getData[i] == 0xC0) { StrNinsert(getData, changeCO, i, 1); allLength++; i++; }
 		}
 
-		char* check = checksum(getData, allLength);
+		unsigned char* check = checksum(getData, allLength);
 		
 		//읽어온 메모리카피!
 		for (int i = 0; i < allLength; i++) {
@@ -354,20 +360,22 @@ void CMFCserialportDlg::OnBnClickedBtSend()
 			flashData[5 + i] = check[i];
 		}
 
-		Send(flashData, length);
+	ONE:
+		Send(flashData, 10 + allLength);
+		if (notSend == 1) { notSend = 0; goto ONE; }
 
 		char onPercentChar[20] = "";
 
 		percent++;
 
 		//완수 percent 출력
-		if (percent % 8 == 10) {
-			sprintf(onPercentChar, "%f", (percent / 256) * 100);
+		if (percent % 640 == 0) {
+			sprintf(onPercentChar, "%f", ((double)percent / 64000) * 100);
 			On(onPercentChar);
 		}
 	}
 
-	Send(flashEnd, length);
+	Send(flashEnd, 14);
 }
 
 //FIle Open 버튼을 눌렀을 시에 파일을 불러올 수 있도록 한 함수

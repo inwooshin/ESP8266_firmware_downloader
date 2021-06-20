@@ -37,7 +37,7 @@ public:
 	// Operations
 public:
 	void Clear();
-	int Receive(LPSTR inbuf, int len);
+	int Receive(unsigned char* inbuf, int len);
 	BOOL Send(LPCTSTR outbuf, int len);
 	BOOL Send(unsigned char *, int len);
 	BOOL Create(HWND hWnd);
